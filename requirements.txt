@@ -1,0 +1,10 @@
+
+Flask
+
+# Database
+Flask-SQLAlchemy
+psycopg2-binary
+alembic
+
+# celery
+celery[redis]==5.2.3
