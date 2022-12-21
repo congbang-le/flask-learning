@@ -1,8 +1,31 @@
 from tasks import sum_int
 from flask import Flask, request
-from models import CarsModel
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:12345@localhost:5432/cars_api"
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+class CarsModel(db.Model):
+    __tablename__ = 'cars'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String())   # Fortuner
+    brand = db.Column(db.String())  # Toyota
+    type = db.Column(db.String())   # SUV
+    seats = db.Column(db.Integer)   # 4
+
+    def __init__(self, name, brand, type, seats):
+        self.name = name
+        self.brand = brand
+        self.type = type
+        self.seats = seats
+
+    def __repr__(self):
+        return f"<Car {self.name}>"
+
 
 @app.get("/health")
 def healthcheck():
@@ -17,6 +40,35 @@ def run_task():
     except:
         return "Failed", 404
 
+@app.post('/cars')
+def create_car():
+    if request.is_json:
+        data = request.json
+        new_car = CarsModel(name=data['name'], brand=data['brand'], type=data['type'], seats=data['seats'])
+        db.session.add(new_car)
+        db.session.commit()
+        return {"message": f"car {new_car.name} has been created successfully."}
+    else:
+        return {"error": "The request payload is not in JSON format"}, 404
+
+@app.get('/cars')
+def get_car():
+    cars = CarsModel.query.all()
+    results = [
+        {
+            "name": car.name,
+            "brand": car.brand,
+            "type": car.type,
+            "seats": car.seats,
+        } for car in cars]
+
+    return {"count": len(results), "cars": results}
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
 
