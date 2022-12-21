@@ -2,9 +2,12 @@
 Flask
 
 # Database
-Flask-SQLAlchemy
+sqlalchemy
+flask-sqlalchemy
 psycopg2-binary
 alembic
+Flask-Migrate
 
 # celery
+importlib-metadata==4.13.0
 celery[redis]==5.2.3
