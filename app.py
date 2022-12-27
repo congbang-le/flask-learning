@@ -1,5 +1,6 @@
+from turtle import update
 from tasks import sum_int
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -25,6 +26,10 @@ class CarsModel(db.Model):
 
     def __repr__(self):
         return f"<Car {self.name}>"
+    
+    def serialize(self):
+        return {"id": self.id,
+                "name": self.name}
 
 
 @app.get("/health")
@@ -52,7 +57,7 @@ def create_car():
         return {"error": "The request payload is not in JSON format"}, 404
 
 @app.get('/cars')
-def get_car():
+def get_all():
     cars = CarsModel.query.all()
     results = [
         {
@@ -64,8 +69,22 @@ def get_car():
 
     return {"count": len(results), "cars": results}
 
+@app.get('/cars/<int:id>')
+def get_car(id):
+    return jsonify({'car': CarsModel.query.get(id).serialize()})
 
+@app.put('/cars/<int:id>')
+def update_car(id):
+    updated_car = CarsModel.query.get(id)
+    updated_car.name = request.json.get('name', updated_car.name)
+    db.session.commit()
+    return jsonify({'car': updated_car.serialize()})
 
+@app.delete('/cars/<int:id>')
+def delete_car(id):
+    db.session.delete(CarsModel.query.get(id))
+    db.session.commit()
+    return jsonify({'result': True})
 
 if __name__ == '__main__':
     app.run(debug=True)
