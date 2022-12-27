@@ -26,7 +26,7 @@ class CarsModel(db.Model):
 
     def __repr__(self):
         return f"<Car {self.name}>"
-    
+
     def serialize(self):
         return {"id": self.id,
                 "name": self.name}
@@ -36,25 +36,29 @@ class CarsModel(db.Model):
 def healthcheck():
     return "Healthy", 200
 
+
 @app.post("/sum")
 def run_task():
     try:
         data = request.json
-        task = sum_int.delay(data["first_int"] , data["second_int"])
+        task = sum_int.delay(data["first_int"], data["second_int"])
         return f"success with {task}", 201
     except:
         return "Failed", 404
+
 
 @app.post('/cars')
 def create_car():
     if request.is_json:
         data = request.json
-        new_car = CarsModel(name=data['name'], brand=data['brand'], type=data['type'], seats=data['seats'])
+        new_car = CarsModel(
+            name=data['name'], brand=data['brand'], type=data['type'], seats=data['seats'])
         db.session.add(new_car)
         db.session.commit()
         return {"message": f"car {new_car.name} has been created successfully."}
     else:
         return {"error": "The request payload is not in JSON format"}, 404
+
 
 @app.get('/cars')
 def get_all():
@@ -69,9 +73,11 @@ def get_all():
 
     return {"count": len(results), "cars": results}
 
+
 @app.get('/cars/<int:id>')
 def get_car(id):
     return jsonify({'car': CarsModel.query.get(id).serialize()})
+
 
 @app.put('/cars/<int:id>')
 def update_car(id):
@@ -80,15 +86,13 @@ def update_car(id):
     db.session.commit()
     return jsonify({'car': updated_car.serialize()})
 
+
 @app.delete('/cars/<int:id>')
 def delete_car(id):
     db.session.delete(CarsModel.query.get(id))
     db.session.commit()
     return jsonify({'result': True})
 
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
